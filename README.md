@@ -39,7 +39,7 @@ Holding one of these keys and at the same time pressing the up or down arrow cha
 - **L** Hides/shows statistics
 
 ## Console
-To show the console, right click and then click “inspect” or “inspect element”. Then navigate to the console. There, every - action of the game is logged.
+To show the console, right click and then click “inspect” or “inspect element”. Then navigate to the console. There, every action of the game is logged.
 
 - **S** Print statistics
 
