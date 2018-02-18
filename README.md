@@ -46,13 +46,13 @@ To show the console, right click and then click “inspect” or “inspect elem
 By typing into the console and then pressing enter, the statistics can be directly changed. The examples show how to changes team 1’s statistics, but team 2’s statistics can be modified by simply replacing the 1 with a 2. The number you wish to set the statistic to goes in place of x. After changing a statistic, click the web page and press R to refresh the scoreboard.
 
 - **team1.name = “x”** The new name must be enclosed in quotation marks
-- **team1.score = x 
-- team1.made1s = x
-- team1.missed1s = x
-- team1.made2s = x
-- team1.missed2s = x
-- team1.made3s = x
-- team1.missed3s = x
-- team1.fouls = x
-- team1.turnovers = x**
+- **team1.score = x** 
+- **team1.made1s = x**
+- **team1.missed1s = x**
+- **team1.made2s = x**
+- **team1.missed2s = x**
+- **team1.made3s = x**
+- **team1.missed3s = x**
+- **team1.fouls = x**
+- **team1.turnovers = x**
 - **time = x** Total time in seconds
