@@ -3,6 +3,9 @@ A web interface for entering and displaying some simple elements of a basketball
 
 Upon loading game.html in your browser, some alerts should pop up asking the name of each team, number of points, turnovers, fouls, and time in the game clock. If these do not pop up, just refresh the page. After completing the alerts the scoreboard will be set up.
 
+If you wish to watch a video tutorial, you can here:
+https://youtu.be/yiZEnkaB_Oo
+
 ## Team 1
 Team 1 is on the left side of the scoreboard, and the following keys will help you edit the team’s statistics.
 
