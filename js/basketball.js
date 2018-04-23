@@ -1,3 +1,8 @@
+//New Features:
+// - Graph (H)
+// - Toggle Lines (Keys)
+// - Toggle Key (Keys)
+
 //Canvas
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext("2d");
@@ -7,13 +12,15 @@ console.log("Canvas Created");
 document.body.addEventListener("keydown", keyDown, false);
 document.body.addEventListener("keyup", keyUp, false);
 
-var defaults = true; //If true, skips the alert setup process.
+var defaults = false; //If true, skips the alert setup process.
 
 var team1;
 var team2;
 var ui;
 
 var time = 0;
+var totalTime = 0; //Does not count down, preserves initial time
+var timeElapsed = 0; //Counts up
 
 var windowWidth;
 var windowHeight;
@@ -73,10 +80,13 @@ function setUp(){
         minutes = parseInt(prompt("Enter the amount of minutes in the game."));
         seconds = parseInt(prompt("Enter the amount of seconds in the game."));
         time = minutes*60+seconds;
+        totalTime = minutes*60+seconds;
+        
     }else{
         team1 = new Team("Siena", 0, 0, 0);
         team2 = new Team("Monmouth", 0, 0, 0);
-        time = 20*60+0;
+        time = 1*60+0;
+        totalTime = 1*60+0;
     }
     
 }
@@ -102,6 +112,15 @@ function UI(){
     
     this.showStats = true;
     
+    this.showGraph = false;
+    
+    //Show percentages on chart
+    this.team1p3 = false;
+    this.team1p2 = false;
+    
+    this.team2p3 = false;
+    this.team2p2 = false;
+    
     //Each array index corresponds to a color
     this.colorsRed =   [255, 110, 117, 255, 255, 255, 117, 195, 255, 200];
     this.colorsGreen = [255, 255, 190, 96,  178, 255, 158, 117, 117, 200];
@@ -119,6 +138,14 @@ function UI(){
         this.team2();
         
         ui.drawClock();
+        
+        //Make graph flat
+        team1.scoreChange.push([team1.score, timeElapsed]);
+        team2.scoreChange.push([team2.score, timeElapsed]);
+        
+        if (this.showGraph == true){
+            this.graph();
+        }
 	}
     UI.prototype.clock = function(){
         minutes = Math.floor(time / 60);
@@ -129,10 +156,9 @@ function UI(){
                 setTimeout(ui.clock, 1000);
                 
                 time -= 1;
+                timeElapsed += 1;
             }
-
             ui.update();
-            
         }
     }
     UI.prototype.drawClock = function(){
@@ -450,6 +476,159 @@ function UI(){
         
         console.log("");
     }
+    UI.prototype.graph = function(){
+        ctx.clearRect(0, 0, windowWidth, windowHeight);
+        
+        ctx.font = "16px Arial";
+        
+        //Time Axis
+        minutes = Math.ceil(totalTime/60);
+        
+        timeInterval = Math.round((windowWidth - 150)/minutes);
+        
+        for (var x = 0; x < minutes + 1; x++){
+            ctx.fillText(x, 100 + x*timeInterval, windowHeight - 15);
+        }
+        
+        //Percent Axis
+        percentInterval = Math.round((windowHeight-50)/10);
+        
+        for (var y = 10; y > -1; y -= 1){
+            ctx.fillText(y * 10, 5, windowHeight - (percentInterval * y) - 30)
+        }
+        
+        //Score Axis
+        if (team1.score > team2.score){
+            maxScore = team1.score;
+        }else{
+            maxScore = team2.score;
+        }
+        
+        if (maxScore < 10){ //Prevent divide by 0 Error
+            maxScore = 10;
+        }
+        
+        maxScore = Math.ceil(maxScore / 10) * 10; //Round to highest 10
+
+        scoreInterval = Math.round((windowHeight-50)/(maxScore/10));
+        
+        for (var z = maxScore / 10; z > -1; z -= 1){
+            ctx.fillText(z * 10, 40, windowHeight - (scoreInterval * z) - 30);
+        }
+        
+        ctx.lineWidth = 2;
+        
+        //Score Graph Team1
+        ctx.strokeStyle = "blue";
+        
+        for (var x = 0; x < team1.scoreChange.length - 1; x++){
+            ctx.beginPath();
+            ctx.moveTo(103 + (team1.scoreChange[x][1]/60*timeInterval), windowHeight - ((team1.scoreChange[x][0]/10) * scoreInterval) - 35);
+            ctx.lineTo(103 + (team1.scoreChange[x+1][1]/60*timeInterval), windowHeight - ((team1.scoreChange[x+1][0]/10) * scoreInterval) - 35);
+            ctx.stroke();
+        }
+        
+        //Score Graph Team2
+        ctx.strokeStyle = "red";
+        
+        for (var x = 0; x < team2.scoreChange.length - 1; x++){
+            ctx.beginPath();
+            ctx.moveTo(103 + (team2.scoreChange[x][1]/60*timeInterval), windowHeight - ((team2.scoreChange[x][0]/10) * scoreInterval) - 35);
+            ctx.lineTo(103 + (team2.scoreChange[x+1][1]/60*timeInterval), windowHeight - ((team2.scoreChange[x+1][0]/10) * scoreInterval) - 35);
+            ctx.stroke();
+        }
+        
+        //3pt Graph Team1
+        ctx.strokeStyle = "green";
+        
+        if (this.team1p3 == true){
+            for (var x = 0; x < team1.p3.length - 1; x++){
+                ctx.beginPath();
+                ctx.moveTo(103 + (team1.p3[x][1]/60*timeInterval), windowHeight - (percentInterval * (team1.p3[x][0]/10)) - 30);
+                ctx.lineTo(103 + (team1.p3[x+1][1]/60*timeInterval), windowHeight - (percentInterval * (team1.p3[x+1][0]/10)) - 30);
+                ctx.stroke();
+            }
+        }
+        
+        //3pt Graph Team2
+        ctx.strokeStyle = "orange";
+        
+        if (this.team2p3 == true){
+            for (var x = 0; x < team2.p3.length - 1; x++){
+                ctx.beginPath();
+                ctx.moveTo(103 + (team2.p3[x][1]/60*timeInterval), windowHeight - (percentInterval * (team2.p3[x][0]/10)) - 30);
+                ctx.lineTo(103 + (team2.p3[x+1][1]/60*timeInterval), windowHeight - (percentInterval * (team2.p3[x+1][0]/10)) - 30);
+                ctx.stroke();
+            }
+        }
+        
+        //2pt Graph Team1
+        ctx.strokeStyle = "purple";
+        
+        if (this.team1p2 == true){
+            for (var x = 0; x < team1.p2.length - 1; x++){
+                ctx.beginPath();
+                ctx.moveTo(103 + (team1.p2[x][1]/60*timeInterval), windowHeight - (percentInterval * (team1.p2[x][0]/10)) - 30);
+                ctx.lineTo(103 + (team1.p2[x+1][1]/60*timeInterval), windowHeight - (percentInterval * (team1.p2[x+1][0]/10)) - 30);
+                ctx.stroke();
+            }
+        }
+        
+        //2pt Graph Team2
+        ctx.strokeStyle = "Aqua";
+        
+        if (this.team2p2 == true){
+            for (var x = 0; x < team2.p2.length - 1; x++){
+                ctx.beginPath();
+                ctx.moveTo(103 + (team2.p2[x][1]/60*timeInterval), windowHeight - (percentInterval * (team2.p2[x][0]/10)) - 30);
+                ctx.lineTo(103 + (team2.p2[x+1][1]/60*timeInterval), windowHeight - (percentInterval * (team2.p2[x+1][0]/10)) - 30);
+                ctx.stroke();
+            }
+        }
+        
+        if (this.showStats){
+            //Key
+            ctx.font = "14px Arial";
+
+            //Team1 Points
+            ctx.fillStyle = "blue";
+            ctx.fillRect(85, 0, 15, 15);
+            ctx.fillStyle = "black";
+            ctx.fillText("Team 1 Points", 105, 13);
+
+            //Team1 2pt%
+            ctx.fillStyle = "purple";
+            ctx.fillRect(200, 0, 15, 15);
+            ctx.fillStyle = "black";
+            ctx.fillText("Team 1 2pt%", 220, 13);
+
+            //Team1 3pt%
+            ctx.fillStyle = "green";
+            ctx.fillRect(310, 0, 15, 15);
+            ctx.fillStyle = "black";
+            ctx.fillText("Team 1 3pt%", 330, 13);
+
+
+            //Team2 Points
+            ctx.fillStyle = "red";
+            ctx.fillRect(85, 15, 15, 15);
+            ctx.fillStyle = "black";
+            ctx.fillText("Team 2 Points", 105, 28);
+
+            //Team2 2pt%
+            ctx.fillStyle = "aqua";
+            ctx.fillRect(200, 15, 15, 15);
+            ctx.fillStyle = "black";
+            ctx.fillText("Team 2 2pt%", 220, 28);
+
+            //Team2 3pt%
+            ctx.fillStyle = "orange";
+            ctx.fillRect(310, 15, 15, 15);
+            ctx.fillStyle = "black";
+            ctx.fillText("Team 2 3pt%", 330, 28);
+        }
+        
+    }
     UI.prototype.findFontSize = function(pix, string){
 		//Finds ideal font size for amount of pixels you want to fit a string into
 		for (var x = 200; x > 1; x --){ //Loop through text fonts 100 - 1
@@ -465,17 +644,22 @@ function UI(){
 function Team(name, score, turnovers, fouls){
     this.name = name;
     this.score = score;
+    this.scoreChange = [[0, 0]];
     this.turnovers = turnovers;
     this.fouls = fouls;
     
     this.made1s = 0;
     this.missed1s = 0;
+    this.p3 = []; //Percentage over time
     
     this.made2s = 0;
     this.missed2s = 0;
+    this.p2 = [];
     
     this.made3s = 0;
     this.missed3s = 0;
+    this.p1 = [];
+    
     
     this.made = true; //False if 0 is pressed, signifies missed shot.
     
@@ -486,12 +670,15 @@ function Team(name, score, turnovers, fouls){
             
             if (points == 1){
                 this.made1s += 1;
+                this.p1.push([Math.round((this.made1s/(this.made1s + this.missed1s))*100), timeElapsed]); //Push percentage at current time
             }
             if (points == 2){
                 this.made2s += 1;
+                this.p2.push([Math.round((this.made2s/(this.made2s + this.missed2s))*100), timeElapsed]);
             }
             if (points == 3){
                 this.made3s += 1;
+                this.p3.push([Math.round((this.made3s/(this.made3s + this.missed3s))*100), timeElapsed]);
             }
             console.log(points + " Point shot made by " + this.name);
         }
@@ -499,18 +686,25 @@ function Team(name, score, turnovers, fouls){
         if (this.made == false){
             if (points == 1){
                 this.missed1s += 1;
+                this.p1.push([Math.round((this.made1s/(this.made1s + this.missed1s))*100), timeElapsed])
             }
             if (points == 2){
                 this.missed2s += 1;
+                this.p2.push([Math.round((this.made2s/(this.made2s + this.missed2s))*100), timeElapsed]);
             }
             if (points == 3){
                 this.missed3s += 1;
+                this.p3.push([Math.round((this.made3s/(this.made3s + this.missed3s))*100), timeElapsed]);
             }
             console.log(points + " Point shot missed by " + this.name);
         }
         
         //Resets made status
         this.made = true;
+        
+        //Push score at current time
+        this.scoreChange.push([this.score, timeElapsed]);
+
     }
 }
 
@@ -678,6 +872,47 @@ function set(key){
         }
 
     }
+    //H
+    if (key == 72){
+        if (ui.showGraph == false){
+            ui.showGraph = true;
+        }else{
+            ui.showGraph = false;
+        }
+    }
+    //A
+    if (key == 65){
+        if (ui.team1p2 == false){
+            ui.team1p2 = true;
+        }else{
+            ui.team1p2 = false;
+        }
+    }
+    //S
+    if (key == 83){
+        if (ui.team1p3 == false){
+            ui.team1p3 = true;
+        }else{
+            ui.team1p3 = false;
+        }
+    }
+    //D
+    if (key == 68){
+        if (ui.team2p2 == false){
+            ui.team2p2 = true;
+        }else{
+            ui.team2p2 = false;
+        }
+    }
+    //F
+    if (key == 70){
+        if (ui.team2p3 == false){
+            ui.team2p3 = true;
+        }else{
+            ui.team2p3 = false;
+        }
+    }
+    
     ui.update();
 }
     
